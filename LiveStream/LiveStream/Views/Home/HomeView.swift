@@ -3,22 +3,19 @@ import SwiftUI
 struct HomeView: View {
     var body: some View {
         TabView {
-            StreamFeedView()
-                .tabItem {
-                    Label("Streams", systemImage: "play.rectangle.fill")
-                }
-
-            BroadcastView()
-                .tabItem {
-                    Label("Go Live", systemImage: "video.badge.plus")
-                }
+            NavigationStack {
+                Text("Home")
+                    .navigationTitle("Home")
+            }
+            .tabItem {
+                Label("Home", systemImage: "house.fill")
+            }
 
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.circle.fill")
                 }
         }
-        .tint(.red)
     }
 }
 

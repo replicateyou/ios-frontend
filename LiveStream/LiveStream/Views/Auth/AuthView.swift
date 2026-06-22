@@ -1,5 +1,4 @@
 import SwiftUI
-import AVKit
 import DynamicSDKSwift
 
 struct AuthView: View {
@@ -7,10 +6,7 @@ struct AuthView: View {
 
     var body: some View {
         ZStack {
-            LoopingVideoPlayer(videoName: "bg", videoExtension: "mp4")
-                .ignoresSafeArea()
-
-            Color.black.opacity(0.45).ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
             VStack(spacing: 40) {
                 Spacer()

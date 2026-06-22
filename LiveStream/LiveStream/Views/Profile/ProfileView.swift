@@ -3,8 +3,6 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var balance = "..."
-    @State private var myStreams: [Stream] = []
-    @State private var isLoading = false
 
     var body: some View {
         NavigationStack {
@@ -47,34 +45,6 @@ struct ProfileView: View {
                     }
                 }
 
-                Section("My Streams (\(myStreams.count))") {
-                    if isLoading {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
-                        }
-                    } else if myStreams.isEmpty {
-                        Text("No streams yet")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(myStreams) { stream in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(stream.title).font(.subheadline)
-                                    Text(stream.createdAt, style: .date).font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if stream.status == .live {
-                                    Text("LIVE").font(.caption).fontWeight(.bold).foregroundStyle(.red)
-                                } else if let duration = stream.duration {
-                                    Text("\(duration)s").font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
-
                 Section {
                     Button(role: .destructive) {
                         Task {
@@ -96,13 +66,8 @@ struct ProfileView: View {
     }
 
     private func loadData() async {
-        isLoading = true
-        defer { isLoading = false }
-
         await WalletService.shared.refreshBalance()
         balance = WalletService.shared.balance
-        let all = (try? await APIClient.shared.getStreams()) ?? []
-        myStreams = all.filter { $0.creatorAddress.lowercased() == appState.walletAddress?.lowercased() }
     }
 }
 

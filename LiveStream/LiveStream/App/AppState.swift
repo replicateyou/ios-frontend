@@ -28,10 +28,8 @@ class AppState: ObservableObject {
             authToken = token
             walletAddress = defaults.string(forKey: SessionKeys.walletAddress)
             userName = defaults.string(forKey: SessionKeys.userName)
-            StreamBetClient.shared.authToken = token
             WalletService.shared.address = walletAddress
             if walletAddress != nil { WalletService.shared.onWalletsUpdated() }
-            StreamBetWebSocket.shared.connect(token: token)
         }
 
         guard let sdk = try? DynamicSDK.shared else {
@@ -55,11 +53,7 @@ class AppState: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] token in
                 self?.authToken = token
-                StreamBetClient.shared.authToken = token
                 self?.persistSession()
-                if let token {
-                    StreamBetWebSocket.shared.connect(token: token)
-                }
             }
             .store(in: &cancellables)
 
