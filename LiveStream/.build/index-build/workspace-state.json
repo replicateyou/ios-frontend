@@ -1,0 +1,85 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "livestream",
+          "kind" : "root",
+          "location" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream",
+          "name" : "LiveStream"
+        },
+        "path" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/Frameworks/SolanaWeb3.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "SolanaWeb3"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "livestream",
+          "kind" : "root",
+          "location" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream",
+          "name" : "LiveStream"
+        },
+        "path" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/Frameworks/AnyCodableSwift.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "AnyCodableSwift"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "livestream",
+          "kind" : "root",
+          "location" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream",
+          "name" : "LiveStream"
+        },
+        "path" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/Frameworks/DynamicSDKSwift.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "DynamicSDKSwiftBinary"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "livestream",
+          "kind" : "root",
+          "location" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream",
+          "name" : "LiveStream"
+        },
+        "path" : "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/Frameworks/SwiftBigInt.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "SwiftBigInt"
+      }
+    ],
+    "dependencies" : [
+
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

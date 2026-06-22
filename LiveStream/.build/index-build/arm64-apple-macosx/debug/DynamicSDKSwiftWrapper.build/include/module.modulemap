@@ -1,0 +1,3 @@
+module DynamicSDKSwiftWrapper {
+    header "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/include/DynamicSDKSwiftWrapper-Swift.h"
+}

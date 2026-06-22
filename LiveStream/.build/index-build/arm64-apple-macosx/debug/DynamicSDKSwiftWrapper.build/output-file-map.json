@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/master.swiftdeps"
+  },
+  "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/Sources/DynamicSDKSwiftWrapper/DynamicSDKSwiftWrapper.swift": {
+    "dependencies": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/DynamicSDKSwiftWrapper.d",
+    "object": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/DynamicSDKSwiftWrapper.swift.o",
+    "swiftmodule": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/DynamicSDKSwiftWrapper~partial.swiftmodule",
+    "swift-dependencies": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/DynamicSDKSwiftWrapper.swiftdeps",
+    "diagnostics": "/Users/alok/Projects/Hackathons/Ethglobal-cannes-2026/ios/LiveStream/.build/index-build/arm64-apple-macosx/debug/DynamicSDKSwiftWrapper.build/DynamicSDKSwiftWrapper.dia"
+  }
+}

@@ -1,0 +1,40 @@
+name: Arcadia
+options:
+  bundleIdPrefix: com.ethglobal.cannes2026
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+
+targets:
+  Arcadia:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - LiveStream
+    resources:
+      - LiveStream/Resources
+    info:
+      path: LiveStream/Info.plist
+      properties:
+        CFBundleDisplayName: Arcadia
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen:
+          UIColorName: "LaunchBackground"
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
+              - arcadia
+        NSCameraUsageDescription: "Camera access is needed to broadcast live streams."
+        NSMicrophoneUsageDescription: "Microphone access is needed to broadcast live audio."
+        UIApplicationSupportsIndirectInputEvents: true
+        UIRequiresFullScreen: false
+    # TODO: Add Dynamic SDK once you have the correct SPM URL:
+    # dependencies:
+    #   - package: DynamicSDK
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        PRODUCT_BUNDLE_IDENTIFIER: com.ethglobal.cannes2026.arcadia
+        DEVELOPMENT_TEAM: ""
