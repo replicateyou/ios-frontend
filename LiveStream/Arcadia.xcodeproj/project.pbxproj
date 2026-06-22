@@ -19,6 +19,9 @@
 		5C3CBCFB2F81A3690075D2B2 /* SwiftBigInt.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C3CBCF32F81A3510075D2B2 /* SwiftBigInt.xcframework */; };
 		5C3CBCFC2F81A3690075D2B2 /* SwiftBigInt.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5C3CBCF32F81A3510075D2B2 /* SwiftBigInt.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5C3CBCFF2F81A3750075D2B2 /* AnyCodableSwift.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C3CBCF02F81A3510075D2B2 /* AnyCodableSwift.xcframework */; };
+		5CE27C282FE9D38500FEA31A /* Quest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE27C272FE9D38500FEA31A /* Quest.swift */; };
+		5CE27C2A2FE9D38D00FEA31A /* QuestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE27C292FE9D38D00FEA31A /* QuestDetailView.swift */; };
+		5CE27C2D2FE9D68D00FEA31A /* QuestStreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE27C2C2FE9D68D00FEA31A /* QuestStreamView.swift */; };
 		628E7364ECDE825B7B27E79C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D166AA57D7D013ED87228D53 /* HomeView.swift */; };
 		66B437575C266A90CB3348BB /* WalletService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4DD6CF13A0F23FAEDC5FABB /* WalletService.swift */; };
 		773B42F8B755EB6880B77829 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D520B37BC42F6C34BA3A8BC9 /* AuthView.swift */; };
@@ -52,6 +55,9 @@
 		5C3CBCF12F81A3510075D2B2 /* DynamicSDKSwift.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = DynamicSDKSwift.xcframework; sourceTree = "<group>"; };
 		5C3CBCF22F81A3510075D2B2 /* SolanaWeb3.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SolanaWeb3.xcframework; sourceTree = "<group>"; };
 		5C3CBCF32F81A3510075D2B2 /* SwiftBigInt.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = SwiftBigInt.xcframework; sourceTree = "<group>"; };
+		5CE27C272FE9D38500FEA31A /* Quest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quest.swift; sourceTree = "<group>"; };
+		5CE27C292FE9D38D00FEA31A /* QuestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestDetailView.swift; sourceTree = "<group>"; };
+		5CE27C2C2FE9D68D00FEA31A /* QuestStreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestStreamView.swift; sourceTree = "<group>"; };
 		5F2CA85BFA68DB9151B206D4 /* LiveStreamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStreamApp.swift; sourceTree = "<group>"; };
 		63C6660FEFAB842A03398466 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		8E7A48A248E01CD53E08E54B /* DynamicSDK+Safe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DynamicSDK+Safe.swift"; sourceTree = "<group>"; };
@@ -95,10 +101,10 @@
 				D0E44B5CCD61F3F617E1860E /* Info.plist */,
 				E4B226F0CEDA3036BD412DDD /* App */,
 				FBBF68E4A30DFA95034D6E34 /* Config */,
-				B1AAFAFF4F05DA1BF1B273BA /* Models */,
 				1F42BFB69F31DEEFD6C51719 /* Resources */,
 				7B339BC63AA54863EDE7560A /* Services */,
 				A995AF9DFB5CAEA10D927147 /* Views */,
+				5CE27C262FE9D38000FEA31A /* Models */,
 			);
 			path = LiveStream;
 			sourceTree = "<group>";
@@ -109,13 +115,6 @@
 				D6ADE99C572EC29845CA9C9B /* Assets.xcassets */,
 			);
 			path = Resources;
-			sourceTree = "<group>";
-		};
-		4023FB2F43D28538EFF1EBE2 /* Markets */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Markets;
 			sourceTree = "<group>";
 		};
 		5C3CBCF42F81A3510075D2B2 /* Frameworks */ = {
@@ -136,9 +135,18 @@
 			path = Media;
 			sourceTree = "<group>";
 		};
-		6944F7992A1E820004AE0D71 /* Stream */ = {
+		5CE27C262FE9D38000FEA31A /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				5CE27C272FE9D38500FEA31A /* Quest.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		5CE27C2B2FE9D66700FEA31A /* Stream */ = {
+			isa = PBXGroup;
+			children = (
+				5CE27C2C2FE9D68D00FEA31A /* QuestStreamView.swift */,
 			);
 			path = Stream;
 			sourceTree = "<group>";
@@ -174,18 +182,10 @@
 				0077A8529502728706B205D8 /* RootView.swift */,
 				D2E08E6A7BCFA19D096F72DE /* Auth */,
 				DD0044BA7AC3EF9714E2560C /* Home */,
-				4023FB2F43D28538EFF1EBE2 /* Markets */,
 				8E2C1F65211BFDFFA580F5BA /* Profile */,
-				6944F7992A1E820004AE0D71 /* Stream */,
+				5CE27C2B2FE9D66700FEA31A /* Stream */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		B1AAFAFF4F05DA1BF1B273BA /* Models */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Models;
 			sourceTree = "<group>";
 		};
 		D2E08E6A7BCFA19D096F72DE /* Auth */ = {
@@ -200,6 +200,7 @@
 			isa = PBXGroup;
 			children = (
 				D166AA57D7D013ED87228D53 /* HomeView.swift */,
+				5CE27C292FE9D38D00FEA31A /* QuestDetailView.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -288,6 +289,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5CE27C282FE9D38500FEA31A /* Quest.swift in Sources */,
+				5CE27C2D2FE9D68D00FEA31A /* QuestStreamView.swift in Sources */,
 				9A34B136773550C1D28F597C /* AppState.swift in Sources */,
 				773B42F8B755EB6880B77829 /* AuthView.swift in Sources */,
 				FC78B438729921ABA4ED25D2 /* Constants.swift in Sources */,
@@ -297,6 +300,7 @@
 				06F9D35D7889C96B8E13CE88 /* ProfileView.swift in Sources */,
 				49F9AD9310A2F566DBB77040 /* RootView.swift in Sources */,
 				66B437575C266A90CB3348BB /* WalletService.swift in Sources */,
+				5CE27C2A2FE9D38D00FEA31A /* QuestDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,8 +384,12 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ethglobal.cannes2026.arcadia;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -455,8 +463,12 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ethglobal.cannes2026.arcadia;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
