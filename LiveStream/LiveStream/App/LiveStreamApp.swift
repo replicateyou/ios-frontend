@@ -2,7 +2,7 @@ import SwiftUI
 import DynamicSDKSwift
 
 @main
-struct ArcadiaApp: App {
+struct ReplicateApp: App {
     @StateObject private var appState = AppState()
 
     init() {

@@ -1,14 +1,17 @@
 import SwiftUI
 import AVFoundation
+import Combine
 
 // MARK: - Camera Manager
 
 @MainActor
-final class CameraManager: ObservableObject {
+final class CameraManager: NSObject, ObservableObject {
     @Published var isAuthorized = false
 
     let session = AVCaptureSession()
     private var hasConfigured = false
+    private var movieOutput: AVCaptureMovieFileOutput?
+    var onChunkReady: ((URL) -> Void)?
 
     func setup() async {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -23,12 +26,26 @@ final class CameraManager: ObservableObject {
         hasConfigured = true
 
         session.beginConfiguration()
+
         if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
             ?? AVCaptureDevice.default(for: .video),
            let input = try? AVCaptureDeviceInput(device: device),
            session.canAddInput(input) {
             session.addInput(input)
         }
+
+        if let audioDevice = AVCaptureDevice.default(for: .audio),
+           let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
+           session.canAddInput(audioInput) {
+            session.addInput(audioInput)
+        }
+
+        let output = AVCaptureMovieFileOutput()
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+            movieOutput = output
+        }
+
         session.commitConfiguration()
 
         DispatchQueue.global(qos: .userInitiated).async { [session] in
@@ -38,9 +55,145 @@ final class CameraManager: ObservableObject {
 
     func stop() {
         DispatchQueue.global(qos: .userInitiated).async { [session] in
-            if session.isRunning {
-                session.stopRunning()
-            }
+            if session.isRunning { session.stopRunning() }
+        }
+    }
+
+    func startChunk() {
+        guard let movieOutput, !movieOutput.isRecording else { return }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chunk-\(UUID().uuidString).mp4")
+        movieOutput.startRecording(to: url, recordingDelegate: self)
+    }
+
+    func stopChunk() {
+        guard let movieOutput, movieOutput.isRecording else { return }
+        movieOutput.stopRecording()
+    }
+}
+
+extension CameraManager: AVCaptureFileOutputRecordingDelegate {
+    nonisolated func fileOutput(
+        _ output: AVCaptureFileOutput,
+        didFinishRecordingTo outputFileURL: URL,
+        from connections: [AVCaptureConnection],
+        error: Error?
+    ) {
+        guard error == nil else { return }
+        Task { @MainActor [weak self] in
+            self?.onChunkReady?(outputFileURL)
+        }
+    }
+}
+
+// MARK: - Stream View Model
+
+@MainActor
+final class StreamViewModel: ObservableObject {
+    @Published var elapsedSeconds = 0
+    @Published var chunkSecondsElapsed = 0
+    @Published var accuracy: Double = 0
+    @Published var totalEarned: Double = 0
+    @Published var statusMessage = "Starting..."
+    @Published var uploadsInFlight = 0
+    @Published var isCameraAuthorized = false
+    @Published var blinkOn = true
+
+    let camera = CameraManager()
+
+    private let quest: Quest
+    private let workerAddress: String
+    private var isActive = false
+    private var isTransitioningChunk = false
+    private var cancellables = Set<AnyCancellable>()
+
+    init(quest: Quest, workerAddress: String) {
+        self.quest = quest
+        self.workerAddress = workerAddress
+
+        camera.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    var formattedTime: String {
+        String(format: "%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
+    }
+
+    var formattedEarnings: String {
+        String(format: "%.3f", totalEarned)
+    }
+
+    var secondsUntilNextChunk: Int {
+        max(0, 30 - chunkSecondsElapsed)
+    }
+
+    var accuracyColor: Color {
+        if accuracy >= 80 { return .green }
+        if accuracy >= 50 { return .yellow }
+        return accuracy == 0 ? .gray : .red
+    }
+
+    func start() async {
+        await camera.setup()
+        isCameraAuthorized = camera.isAuthorized
+        isActive = true
+        statusMessage = "Analyzing stream..."
+        beginChunk()
+    }
+
+    func stop() {
+        isActive = false
+        camera.onChunkReady = nil
+        camera.stopChunk()
+        camera.stop()
+    }
+
+    func tick() {
+        elapsedSeconds += 1
+        chunkSecondsElapsed += 1
+        if chunkSecondsElapsed >= 30, !isTransitioningChunk {
+            isTransitioningChunk = true
+            camera.stopChunk()
+        }
+    }
+
+    // MARK: - Chunk lifecycle
+
+    private func beginChunk() {
+        isTransitioningChunk = false
+        chunkSecondsElapsed = 0
+
+        camera.onChunkReady = { [weak self] url in
+            guard let self else { return }
+            // Start next chunk immediately so recording is continuous
+            if self.isActive { self.beginChunk() }
+            // Upload completed chunk concurrently
+            Task { await self.uploadChunk(at: url) }
+        }
+
+        camera.startChunk()
+    }
+
+    private func uploadChunk(at url: URL) async {
+        defer { try? FileManager.default.removeItem(at: url) }
+        uploadsInFlight += 1
+        defer { uploadsInFlight -= 1 }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let result = try await RelayService.shared.uploadClip(
+                data,
+                category: quest.name,
+                workerAddress: workerAddress
+            )
+            accuracy = Double(result.score)
+            totalEarned += result.payoutA0GI
+            statusMessage = result.isAccepted
+                ? "Verified — score \(result.score)"
+                : "Score \(result.score) — keep going"
+        } catch {
+            statusMessage = "Upload error — continuing"
         }
     }
 }
@@ -49,10 +202,7 @@ final class CameraManager: ObservableObject {
 
 class PreviewUIView: UIView {
     override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
-
-    var previewLayer: AVCaptureVideoPreviewLayer {
-        layer as! AVCaptureVideoPreviewLayer
-    }
+    var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
 }
 
 struct CameraPreviewView: UIViewRepresentable {
@@ -72,24 +222,24 @@ struct CameraPreviewView: UIViewRepresentable {
 
 struct QuestStreamView: View {
     let quest: Quest
+    let workerAddress: String
+
+    @StateObject private var model: StreamViewModel
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var camera = CameraManager()
 
-    @State private var elapsedSeconds = 0
-    @State private var accuracy: Double = 0
-    @State private var earnings: Double = 0
-    @State private var statusMessage = "Initializing..."
-    @State private var blinkOn = true
-
-    private let earningsTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private let accuracyTimer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let blinkTimer = Timer.publish(every: 0.6, on: .main, in: .common).autoconnect()
+
+    init(quest: Quest, workerAddress: String = "") {
+        self.quest = quest
+        self.workerAddress = workerAddress
+        _model = StateObject(wrappedValue: StreamViewModel(quest: quest, workerAddress: workerAddress))
+    }
 
     var body: some View {
         ZStack {
-            // Camera background
-            if camera.isAuthorized {
-                CameraPreviewView(session: camera.session)
+            if model.isCameraAuthorized {
+                CameraPreviewView(session: model.camera.session)
                     .ignoresSafeArea()
             } else {
                 Color.black.ignoresSafeArea()
@@ -102,7 +252,6 @@ struct QuestStreamView: View {
                 }
             }
 
-            // Gradient overlays for readability
             VStack {
                 LinearGradient(colors: [.black.opacity(0.7), .clear], startPoint: .top, endPoint: .bottom)
                     .frame(height: 140)
@@ -112,14 +261,12 @@ struct QuestStreamView: View {
             }
             .ignoresSafeArea()
 
-            // HUD
             VStack(spacing: 0) {
                 // Top bar
                 HStack {
-                    // LIVE badge
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(blinkOn ? .red : .red.opacity(0.3))
+                            .fill(model.blinkOn ? .red : .red.opacity(0.3))
                             .frame(width: 10, height: 10)
                         Text("LIVE")
                             .font(.caption.bold())
@@ -131,8 +278,7 @@ struct QuestStreamView: View {
 
                     Spacer()
 
-                    // Timer
-                    Text(formattedTime)
+                    Text(model.formattedTime)
                         .font(.subheadline.monospacedDigit().bold())
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
@@ -141,7 +287,6 @@ struct QuestStreamView: View {
 
                     Spacer()
 
-                    // Quest label
                     Text(quest.name)
                         .font(.caption.bold())
                         .foregroundStyle(.white)
@@ -156,11 +301,17 @@ struct QuestStreamView: View {
 
                 // Bottom overlay
                 VStack(spacing: 16) {
-                    // Status message
+                    // Status
                     HStack(spacing: 8) {
-                        Image(systemName: "brain.head.profile")
-                            .foregroundStyle(.purple)
-                        Text(statusMessage)
+                        if model.uploadsInFlight > 0 {
+                            ProgressView()
+                                .tint(.purple)
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "brain.head.profile")
+                                .foregroundStyle(.purple)
+                        }
+                        Text(model.statusMessage)
                             .font(.subheadline.bold())
                             .foregroundStyle(.white)
                     }
@@ -170,28 +321,27 @@ struct QuestStreamView: View {
 
                     // Stats row
                     HStack(spacing: 24) {
-                        // Accuracy gauge
+                        // AI score
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
                                     .stroke(.white.opacity(0.2), lineWidth: 6)
                                     .frame(width: 64, height: 64)
                                 Circle()
-                                    .trim(from: 0, to: accuracy / 100)
-                                    .stroke(accuracyColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                    .trim(from: 0, to: model.accuracy / 100)
+                                    .stroke(model.accuracyColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                                     .frame(width: 64, height: 64)
                                     .rotationEffect(.degrees(-90))
-                                Text("\(Int(accuracy))%")
+                                Text("\(Int(model.accuracy))%")
                                     .font(.system(.callout, design: .rounded).bold())
                                     .foregroundStyle(.white)
                                     .contentTransition(.numericText())
                             }
-                            Text("Task Match")
+                            Text("AI Score")
                                 .font(.caption2)
                                 .foregroundStyle(.white.opacity(0.7))
                         }
 
-                        // Divider
                         Rectangle()
                             .fill(.white.opacity(0.2))
                             .frame(width: 1, height: 60)
@@ -202,32 +352,37 @@ struct QuestStreamView: View {
                                 Circle()
                                     .fill(.green.opacity(0.15))
                                     .frame(width: 64, height: 64)
-                                Text(formattedEarnings)
-                                    .font(.system(.callout, design: .rounded).bold())
+                                Text(model.formattedEarnings)
+                                    .font(.system(size: 11, design: .rounded).bold())
                                     .foregroundStyle(.green)
                                     .contentTransition(.numericText())
                             }
-                            Text("Earned")
+                            Text("A0GI")
                                 .font(.caption2)
                                 .foregroundStyle(.white.opacity(0.7))
                         }
 
-                        // Divider
                         Rectangle()
                             .fill(.white.opacity(0.2))
                             .frame(width: 1, height: 60)
 
-                        // Rate
+                        // Next clip countdown
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle()
-                                    .fill(.purple.opacity(0.15))
+                                    .stroke(.white.opacity(0.2), lineWidth: 6)
                                     .frame(width: 64, height: 64)
-                                Text("$\(quest.hourlyRate)")
+                                Circle()
+                                    .trim(from: 0, to: Double(30 - model.secondsUntilNextChunk) / 30)
+                                    .stroke(.orange, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                                    .frame(width: 64, height: 64)
+                                    .rotationEffect(.degrees(-90))
+                                Text("\(model.secondsUntilNextChunk)s")
                                     .font(.system(.callout, design: .rounded).bold())
-                                    .foregroundStyle(.purple)
+                                    .foregroundStyle(.white)
+                                    .contentTransition(.numericText())
                             }
-                            Text("$/hr")
+                            Text("Next clip")
                                 .font(.caption2)
                                 .foregroundStyle(.white.opacity(0.7))
                         }
@@ -236,9 +391,9 @@ struct QuestStreamView: View {
                     .padding(.horizontal, 24)
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
 
-                    // End stream button
+                    // End stream
                     Button {
-                        camera.stop()
+                        model.stop()
                         dismiss()
                     } label: {
                         HStack {
@@ -257,58 +412,11 @@ struct QuestStreamView: View {
             }
         }
         .statusBarHidden()
-        .task { await camera.setup() }
-        .onReceive(earningsTimer) { _ in tickEarnings() }
-        .onReceive(accuracyTimer) { _ in tickAccuracy() }
-        .onReceive(blinkTimer) { _ in blinkOn.toggle() }
-        .animation(.easeInOut(duration: 0.4), value: accuracy)
-        .animation(.easeInOut(duration: 0.3), value: earnings)
-    }
-
-    // MARK: - Computed
-
-    private var formattedTime: String {
-        let m = elapsedSeconds / 60
-        let s = elapsedSeconds % 60
-        return String(format: "%02d:%02d", m, s)
-    }
-
-    private var formattedEarnings: String {
-        String(format: "$%.2f", earnings)
-    }
-
-    private var accuracyColor: Color {
-        if accuracy >= 80 { return .green }
-        if accuracy >= 50 { return .yellow }
-        return .red
-    }
-
-    // MARK: - Simulation
-
-    private func tickEarnings() {
-        elapsedSeconds += 1
-        let ratePerSecond = Double(quest.hourlyRate) / 3600.0
-        earnings += ratePerSecond * (accuracy / 100.0)
-    }
-
-    private func tickAccuracy() {
-        let elapsed = Double(elapsedSeconds)
-
-        if elapsed < 3 {
-            accuracy = min(accuracy + Double.random(in: 15...25), 40)
-            statusMessage = "Analyzing stream..."
-        } else if elapsed < 7 {
-            let target = Double.random(in: 75...90)
-            accuracy = min(accuracy + (target - accuracy) * 0.5, 95)
-            statusMessage = "Task detected"
-        } else {
-            let fluctuation = Double.random(in: -5...5)
-            accuracy = min(max(accuracy + fluctuation, 70), 98)
-
-            let questSpecific = "\(quest.name) in progress"
-            let options = [questSpecific, "On task — verified", "On task — verified", questSpecific]
-            statusMessage = options.randomElement() ?? "On task — verified"
-        }
+        .task { await model.start() }
+        .onReceive(ticker) { _ in model.tick() }
+        .onReceive(blinkTimer) { _ in model.blinkOn.toggle() }
+        .animation(.easeInOut(duration: 0.4), value: model.accuracy)
+        .animation(.easeInOut(duration: 0.3), value: model.totalEarned)
     }
 }
 

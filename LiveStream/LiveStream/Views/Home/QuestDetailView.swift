@@ -2,6 +2,7 @@ import SwiftUI
 
 struct QuestDetailView: View {
     let quest: Quest
+    @EnvironmentObject private var appState: AppState
     @State private var isStreaming = false
 
     var body: some View {
@@ -90,7 +91,7 @@ struct QuestDetailView: View {
             .background(.ultraThinMaterial)
         }
         .fullScreenCover(isPresented: $isStreaming) {
-            QuestStreamView(quest: quest)
+            QuestStreamView(quest: quest, workerAddress: appState.walletAddress ?? "")
         }
     }
 
